@@ -146,9 +146,11 @@ void hashmap_put(struct hashmap* map, void* key, void* data) {
   const long index           = hashmap_indexof(map, key);
   struct hashmap_element* el = &(map->array[index]);
   el->value                  = data;
-  el->key                    = key;
-  map->size += (1 - (el->used));
-  el->used = 1;
+  if (!el->used) {
+    el->key = key;
+    map->size++;
+    el->used = 1;
+  }
 }
 
 long hashmap_capacity(const struct hashmap* map) {
