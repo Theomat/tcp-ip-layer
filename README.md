@@ -7,3 +7,5 @@ Implementation of a tcp-ip-layer
 1. [Level ip](https://github.com/saminiir/level-ip), _Saminiir_, last viewed 01/11/19
 
 2. [Original Ethernet specification RFC826](https://tools.ietf.org/html/rfc826), _David C. Plummer_, last viewed 01/11/19
+
+3. [tuntap documentation from Linux Kernel v4.4](https://github.com/torvalds/linux/blob/v4.4/Documentation/networking/tuntap.txt), last viewed 01/11/19
