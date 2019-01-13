@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define DEBUG 0
+
 #include "ethernet.h"
 #include "net_interface.h"
 #include "utils.h"
@@ -17,15 +19,17 @@
 
 bool handle_frame(struct net_interface* interface, struct eth_header* header) {
 
-  switch (ethernet_type(header)) {
+  switch (ethernet_get_type(header)) {
   case ETH_P_ARP:
-    printf("[DEBUG] ");
+#if DEBUG
+    printf("[DEBUG][RECV] ");
     ethernet_fprint(header, stdout);
     printf("\n");
+#endif
     arp_resolve(interface, header);
     return true;
   case ETH_P_IP:
-    DEBUG("Found IPv4\n");
+    LOG_DEBUG("Found IPv4\n");
     break;
   default:
     // ERROR("Unrecognized ethertype %u\n", ethernet_type(header));
@@ -33,29 +37,18 @@ bool handle_frame(struct net_interface* interface, struct eth_header* header) {
   }
   return false;
 }
-void print_hexdump(char* str, int len) {
-  printf("Printing hexdump:\n");
-  for (int i = 0; i < len; i++) {
-    if (i % 8 == 0)
-      printf("\n");
-    printf("%02x ", (unsigned char)str[i]);
-  }
-
-  printf("\n");
-}
 
 int main(int argc, char** argv) {
-  char buffer[BUFLEN];
-  char* dev = calloc(10, 1);
+  char buffer[BUFLEN] = {};
+  char* dev           = calloc(10, 1);
 
-  PUT_ZEROES(buffer);
-
+  // Init everything
   tun_init(dev);
   INFO("Created TUN interface : %s\n", dev);
   struct net_interface* interface =
       net_interface_alloc("10.0.0.4", "00:0c:29:6d:50:25");
-
   arp_init();
+  INFO("Init successful\n");
 
   while (1) {
     if (tun_read(buffer, BUFLEN) < 0) {
@@ -63,9 +56,10 @@ int main(int argc, char** argv) {
     }
 
     struct eth_header* header = to_ethernet_header(buffer);
-
     handle_frame(interface, header);
   }
+  // Destroy everything created
   arp_destroy();
+  net_interface_destroy();
   return EXIT_SUCCESS;
 }
