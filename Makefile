@@ -1,6 +1,6 @@
 # Makefile generated with gcmake v2.1.5 see https://github.com/Theomat/c-toolchain/blob/master/scripts/gcmake
 
-OBJ =  ./out/objects/main.o ./out/objects/arp.o ./out/objects/ethernet.o ./out/objects/net_interface.o ./out/objects/tuntap_interface.o ./out/objects/utils.o ./out/objects/hashmap.o
+OBJ =  ./out/objects/main.o ./out/objects/ethernet.o ./out/objects/net_interface.o ./out/objects/utils.o ./out/objects/arp.o ./out/objects/tuntap_interface.o ./out/objects/hashmap.o
 CC = gcc
 ARGS = -Wall -Werror -std=c99 
 LD_ARGS = 
@@ -25,38 +25,46 @@ profiling :
 
 executable: $(OBJ)
 	@$(CC) $$ld_args -o project $(OBJ)
-test: 
+./out/tests/test_hashmap :  ./out/objects/test_hashmap.o ./out/objects/hashmap.o ./out/tests/
+	@$(CC) $(TEST_LD_ARGS) -o ./out/tests/test_hashmap  ./out/objects/test_hashmap.o ./out/objects/hashmap.o
+test_hashmap: 
+	@export cc_args='$(TEST_ARGS)'; make ./out/tests/test_hashmap;./out/tests/test_hashmap
+test:  test_hashmap
 	@
 report_cov:
-	@lcov $(LCOV_ARGS) -c -d ./out/objects/ -o ./out/tmp_coverage_report.info; mv ./out/tmp_coverage_report.info ./out/coverage_report.info; mkdir -p coverage_report;genhtml $(GENHTML_ARGS) ./out/coverage_report.info -o ./coverage_report/; echo Report generated: ./coverage_report/index.html
+	@lcov $(LCOV_ARGS) -c -d ./out/objects/ -o ./out/tmp_coverage_report.info; lcov $(LCOV_ARGS) -r ./out/tmp_coverage_report.info \*tests/\* -o ./out/coverage_report.info > /dev/null; mkdir -p coverage_report;genhtml $(GENHTML_ARGS) ./out/coverage_report.info -o ./coverage_report/; echo Report generated: ./coverage_report/index.html
 
 reset_cov:
 	@lcov -z $(LCOV_ARGS) -d ./out/objects/
 
-.PHONY : clean project debug check  report_cov
+.PHONY : clean project debug check  test_hashmap report_cov
 
 
-./out/objects/main.o: src/main.c src/arp.h src/ethernet.h src/net_interface.h \
- src/tuntap_interface.h src/utils.h ./out/objects/
+./out/objects/main.o: src/main.c src/ethernet.h src/net_interface.h src/utils.h \
+ src/arp.h src/tuntap_interface.h ./out/objects/
 	@$(CC) $$cc_args -c src/main.c -o ./out/objects/main.o
-./out/objects/arp.o: src/arp.c src/collections/hashmap.h src/ethernet.h \
- src/net_interface.h src/arp.h ./out/objects/
-	@$(CC) $$cc_args -c src/arp.c -o ./out/objects/arp.o
 ./out/objects/ethernet.o: src/ethernet.c src/ethernet.h ./out/objects/
 	@$(CC) $$cc_args -c src/ethernet.c -o ./out/objects/ethernet.o
-./out/objects/net_interface.o: src/net_interface.c src/ethernet.h src/net_interface.h ./out/objects/
+./out/objects/net_interface.o: src/net_interface.c src/ethernet.h \
+ src/tuntap_interface.h src/utils.h src/net_interface.h ./out/objects/
 	@$(CC) $$cc_args -c src/net_interface.c -o ./out/objects/net_interface.o
-./out/objects/tuntap_interface.o: src/tuntap_interface.c src/tuntap_interface.h \
- src/utils.h ./out/objects/
-	@$(CC) $$cc_args -c src/tuntap_interface.c -o ./out/objects/tuntap_interface.o
 ./out/objects/utils.o: src/utils.c src/utils.h ./out/objects/
 	@$(CC) $$cc_args -c src/utils.c -o ./out/objects/utils.o
+./out/objects/arp.o: src/arp.c src/collections/hashmap.h src/ethernet.h \
+ src/net_interface.h src/utils.h src/arp.h ./out/objects/
+	@$(CC) $$cc_args -c src/arp.c -o ./out/objects/arp.o
+./out/objects/tuntap_interface.o: src/tuntap_interface.c src/utils.h \
+ src/tuntap_interface.h ./out/objects/
+	@$(CC) $$cc_args -c src/tuntap_interface.c -o ./out/objects/tuntap_interface.o
 ./out/objects/hashmap.o: src/collections/hashmap.c src/collections/hashmap.h ./out/objects/
 	@$(CC) $$cc_args -c src/collections/hashmap.c -o ./out/objects/hashmap.o
+./out/objects/test_hashmap.o: tests/test_hashmap.c tests/../src/collections/hashmap.h \
+ tests/test.h ./out/objects/
+	@$(CC) $$cc_args -c tests/test_hashmap.c -o ./out/objects/test_hashmap.o
 
 
 remake:
-	@output=$$(ls [m,M]akefile); /home/theo/dev/projects/c-toolchain/scripts/gcmake -m src/main.c -o project $(LD_ARGS) > $$output
+	@output=$$(ls [m,M]akefile); /home/theo/dev/projects/c-toolchain/scripts/gcmake -m src/main.c -t tests/ -o project $(LD_ARGS) > $$output
 
 ./out/:
 	@mkdir -p ./out/
