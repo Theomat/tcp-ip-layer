@@ -1,6 +1,9 @@
 # Executable
 project
 
+# Compiled files
+out
+
 # Prerequisites
 *.d
 
