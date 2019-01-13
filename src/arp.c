@@ -153,9 +153,10 @@ void arp_resolve(struct net_interface* interface,
   assert(interface != NULL);
   assert(eth_header != NULL);
 
-  struct arp_header* header = (struct arp_header*)ethernet_payload(eth_header);
-  struct arp_ipv4* content  = NULL;
-  bool merge_flag           = false;
+  struct arp_header* header =
+      (struct arp_header*)ethernet_get_payload(eth_header);
+  struct arp_ipv4* content = NULL;
+  bool merge_flag          = false;
 
   header->hw_type  = ntohs(header->hw_type);
   header->pro_type = ntohs(header->pro_type);
