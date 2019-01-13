@@ -14,7 +14,9 @@
 
 // Tun device file descriptor
 static int tun_fd;
-
+//------------------------------------------------------------------------------
+//                           SET UP INTERFACE
+//------------------------------------------------------------------------------
 static int set_interface_route(char* dev, char* cidr) {
   return run_cmd("ip route add dev %s %s", dev, cidr);
 }
@@ -57,11 +59,14 @@ static int tun_alloc(char* dev) {
   strcpy(dev, ifr.ifr_name);
   return fd;
 }
-
+//------------------------------------------------------------------------------
+//                               IO
+//------------------------------------------------------------------------------
 int tun_read(char* buf, int len) { return read(tun_fd, buf, len); }
-
 int tun_write(char* buf, int len) { return write(tun_fd, buf, len); }
-
+//------------------------------------------------------------------------------
+//                           ALLOCATION
+//------------------------------------------------------------------------------
 void tun_init(char* dev) {
   tun_fd = tun_alloc(dev);
 
