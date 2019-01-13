@@ -8,7 +8,8 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#include "utils.h"
+#include "utils/log.h"
+#include "utils/runtime_utils.h"
 
 #include "tuntap_interface.h"
 

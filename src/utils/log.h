@@ -1,8 +1,6 @@
-#ifndef UTILS_H
-#define UTILS_H
-int run_cmd(char* cmd, ...);
+#ifndef LOG_H
+#define LOG_H
 
-#define PUT_ZEROES(var) memset(&var, 0, sizeof(var))
 #define INFO(args...)                                                          \
   printf("[INFO] ");                                                           \
   printf(args);

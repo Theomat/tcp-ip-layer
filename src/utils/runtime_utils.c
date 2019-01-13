@@ -5,7 +5,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#include "utils.h"
+#include "runtime_utils.h"
 
 #define CMDBUFLEN 100
 

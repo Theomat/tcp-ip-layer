@@ -11,7 +11,7 @@
 
 #include "ethernet.h"
 #include "tuntap_interface.h"
-#include "utils.h"
+#include "utils/log.h"
 
 #include "net_interface.h"
 

@@ -9,7 +9,7 @@
 #include "collections/hashmap.h"
 #include "ethernet.h"
 #include "net_interface.h"
-#include "utils.h"
+#include "utils/log.h"
 
 #include "arp.h"
 //------------------------------------------------------------------------------

@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "utils/print_utils.h"
+
 #include "ethernet.h"
 //------------------------------------------------------------------------------
 //                              STRUCTURE
@@ -23,13 +25,11 @@ struct eth_header {
 //------------------------------------------------------------------------------
 void ethernet_fprint(struct eth_header* header, FILE* fd) {
   assert(header != NULL);
-  fprintf(fd,
-          "ETH header [dst=%u:%u:%u:%u:%u:%u, src=%u:%u:%u:%u:%u:%u, type=%u]",
-          header->dst_mac[0], header->dst_mac[1], header->dst_mac[2],
-          header->dst_mac[3], header->dst_mac[4], header->dst_mac[5],
-          header->src_mac[0], header->src_mac[1], header->src_mac[2],
-          header->src_mac[3], header->src_mac[4], header->src_mac[5],
-          header->ether_type);
+  fprintf(fd, "ETH header [dst=");
+  mac_fprint(fd, header->dst_mac);
+  fprintf(fd, ", src=");
+  mac_fprint(fd, header->src_mac);
+  fprintf(fd, ", type=%u]", header->ether_type);
 }
 //------------------------------------------------------------------------------
 //                           ALLOCATION
