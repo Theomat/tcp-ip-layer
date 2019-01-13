@@ -68,7 +68,7 @@ static long equals(const void* ptr_a, const void* ptr_b) {
 }
 static uint64_t to_key(uint16_t pro_type, uint32_t src_ip) {
   uint64_t out = pro_type;
-  return out << 32 + src_ip;
+  return (out << 32) + src_ip;
 }
 
 static bool is_in_transition_table(uint16_t pro_type, uint32_t src_ip) {
