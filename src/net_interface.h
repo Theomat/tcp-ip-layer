@@ -11,6 +11,8 @@ unsigned char* net_interface_get_mac(struct net_interface* interface);
 //------------------------------------------------------------------------------
 void net_interface_send(struct net_interface* interface, char* content,
                         uint32_t len, unsigned char* dst_mac);
+void net_interface_broadcast(struct net_interface* interface, char* content,
+                             uint32_t len);
 //------------------------------------------------------------------------------
 //                           ALLOCATION
 //------------------------------------------------------------------------------

@@ -33,6 +33,7 @@ unsigned char* net_interface_get_mac(struct net_interface* interface) {
 
 static struct eth_header* eth_header = NULL;
 static uint32_t max_payload_size     = 0;
+static unsigned char broadcast[6]    = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 //------------------------------------------------------------------------------
 //                           SEND DATA
 //------------------------------------------------------------------------------
@@ -55,6 +56,10 @@ void net_interface_send(struct net_interface* interface, char* content,
 #endif
 
   tun_write((char*)eth_header, len + ETHERNET_HEADER_SIZE);
+}
+void net_interface_broadcast(struct net_interface* interface, char* content,
+                             uint32_t len) {
+  net_interface_send(interface, content, len, broadcast);
 }
 //------------------------------------------------------------------------------
 //                           ALLOCATION

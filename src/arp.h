@@ -24,7 +24,11 @@ void arp_destroy();
 //------------------------------------------------------------------------------
 //                             ARP RESOLVE
 //------------------------------------------------------------------------------
-void arp_resolve(struct net_interface* interface,
+void arp_receive(struct net_interface* interface,
                  struct eth_header* eth_header);
+// Returns the mac address if is in the arp cache
+// If NOT returns NULL and send an ARP request packet to resolve the specific ip
+unsigned char* arp_resolve_ipv4(struct net_interface* interface,
+                                uint32_t ipv4);
 
 #endif

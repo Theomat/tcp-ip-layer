@@ -134,7 +134,7 @@ static void arp_reply(struct net_interface* interface,
   memcpy(content->src_mac, net_interface_get_mac(interface), 6);
 
   header->opcode = ARP_REPLY;
-  // Convert data to network service
+  // Convert local order to network order
   header->opcode   = htons(header->opcode);
   header->hw_type  = htons(header->hw_type);
   header->pro_type = htons(header->pro_type);
@@ -148,7 +148,7 @@ static void arp_reply(struct net_interface* interface,
 //------------------------------------------------------------------------------
 //                             ARP RESOLVE
 //------------------------------------------------------------------------------
-void arp_resolve(struct net_interface* interface,
+void arp_receive(struct net_interface* interface,
                  struct eth_header* eth_header) {
   assert(interface != NULL);
   assert(eth_header != NULL);
@@ -187,6 +187,9 @@ void arp_resolve(struct net_interface* interface,
         }
         if (header->opcode == ARP_REQUEST) {
           arp_reply(interface, header);
+        } else if (header->opcode == ARP_REPLY) {
+          // No error we did add the answer in the transition table
+          // So all is good
         } else {
           ERROR("ARP: Unsupported opcode %u\n", header->opcode);
         }
@@ -198,5 +201,45 @@ void arp_resolve(struct net_interface* interface,
   } else {
     ERROR("ARP: Unsupported hardware type %u of size %u\n", header->hw_type,
           header->hw_type);
+  }
+}
+// Returns the mac address if is in the arp cache
+// If NOT returns NULL and send an ARP request packet to resolve the specific ip
+unsigned char* arp_resolve_ipv4(struct net_interface* interface,
+                                uint32_t ipv4) {
+  if (is_in_transition_table(ARP_IPV4, ipv4)) {
+    uint64_t key = to_key(ARP_IPV4, ipv4);
+    return hashmap_get(transition_table, &key);
+  } else {
+    // Not in transition table so we should send a broadcast
+    struct arp_header* header =
+        calloc(1, sizeof(struct arp_header) + sizeof(struct arp_ipv4));
+    struct arp_ipv4* content = NULL;
+    char broadcast[6]        = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+
+    header->hw_type  = ARP_ETHERNET;
+    header->hw_size  = 6;
+    header->pro_type = ARP_IPV4;
+    header->pro_size = 4;
+    header->opcode   = ARP_REQUEST;
+    // Convert local order to network order
+    header->opcode   = htons(header->opcode);
+    header->hw_type  = htons(header->hw_type);
+    header->pro_type = htons(header->pro_type);
+
+    content = (struct arp_ipv4*)header->data;
+    // Change dest to target to resolve
+    content->dst_ip = ipv4;
+    // Change mac address to broadcast address
+    memcpy(content->dst_mac, broadcast, 6);
+    // Change src to us
+    content->src_ip = net_interface_get_ip(interface);
+    memcpy(content->src_mac, net_interface_get_mac(interface), 6);
+
+    net_interface_broadcast(interface, (char*)header,
+                            sizeof(struct arp_header) +
+                                sizeof(struct arp_ipv4));
+    free(header);
+    return NULL;
   }
 }

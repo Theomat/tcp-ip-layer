@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DEBUG 0
+#define DEBUG 1
 
 #include "ethernet.h"
 #include "net_interface.h"
@@ -26,7 +26,7 @@ bool handle_frame(struct net_interface* interface, struct eth_header* header) {
     ethernet_fprint(header, stdout);
     printf("\n");
 #endif
-    arp_resolve(interface, header);
+    arp_receive(interface, header);
     return true;
   case ETH_P_IP:
     LOG_DEBUG("Found IPv4\n");
