@@ -29,10 +29,9 @@ static long highest_bit(const long i) {
 struct hashmap* hashmap_alloc(const long initial_size,
                               unsigned long (*hash)(const void*),
                               long (*equals)(const void*, const void*)) {
-#ifdef ASSERT
   assert(hash != NULL);
   assert(equals != NULL);
-#endif
+
   struct hashmap* map = malloc(sizeof(struct hashmap));
   long target_size    = highest_bit(initial_size) << 1;
   if (target_size < 16)
@@ -47,17 +46,17 @@ struct hashmap* hashmap_alloc(const long initial_size,
 }
 
 void free_hashmap(struct hashmap* map) {
-#ifdef ASSERT
+
   assert(map != NULL);
-#endif
+
   free(map->array);
   free(map);
 }
 
 static long hashmap_indexof(const struct hashmap* map, const void* key) {
-#ifdef ASSERT
+
   assert(map != NULL);
-#endif
+
   long index                 = (map->hash(key)) & (map->capacity - 1);
   struct hashmap_element* el = &(map->array[index]);
   while (el->used) {
@@ -73,9 +72,9 @@ static long hashmap_indexof(const struct hashmap* map, const void* key) {
 }
 
 char hashmap_contains_key(const struct hashmap* map, const void* key) {
-#ifdef ASSERT
+
   assert(map != NULL);
-#endif
+
   const long index                 = hashmap_indexof(map, key);
   const struct hashmap_element* el = &(map->array[index]);
   return el->used;
@@ -87,9 +86,9 @@ void* hashmap_get(const struct hashmap* map, const void* key) {
 
 void* hashmap_get_or_default(const struct hashmap* map, const void* key,
                              void* def) {
-#ifdef ASSERT
+
   assert(map != NULL);
-#endif
+
   const long index                 = hashmap_indexof(map, key);
   const struct hashmap_element* el = &(map->array[index]);
   if (el->used)
@@ -99,9 +98,9 @@ void* hashmap_get_or_default(const struct hashmap* map, const void* key,
 
 void* hashmap_lget_or_default(const struct hashmap* map, const void* key,
                               void* (*def)()) {
-#ifdef ASSERT
+
   assert(map != NULL);
-#endif
+
   const long index                 = hashmap_indexof(map, key);
   const struct hashmap_element* el = &(map->array[index]);
   if (el->used)
@@ -110,9 +109,9 @@ void* hashmap_lget_or_default(const struct hashmap* map, const void* key,
 }
 
 void hashmap_remove(struct hashmap* map, const void* key) {
-#ifdef ASSERT
+
   assert(map != NULL);
-#endif
+
   const long index           = hashmap_indexof(map, key);
   struct hashmap_element* el = &(map->array[index]);
   el->used                   = 0;
@@ -120,9 +119,9 @@ void hashmap_remove(struct hashmap* map, const void* key) {
 }
 
 void hashmap_clear(struct hashmap* map) {
-#ifdef ASSERT
+
   assert(map != NULL);
-#endif
+
   for (unsigned long i = 0; i < map->capacity; i++) {
     (&(map->array[i]))->used = 0;
   }
@@ -130,16 +129,16 @@ void hashmap_clear(struct hashmap* map) {
 }
 
 long hashmap_load_factor(const struct hashmap* map) {
-#ifdef ASSERT
+
   assert(map != NULL);
-#endif
+
   return (map->size) * 100 / (map->capacity);
 }
 
 void hashmap_put(struct hashmap* map, void* key, void* data) {
-#ifdef ASSERT
+
   assert(map != NULL);
-#endif
+
   if (hashmap_load_factor(map) > 70) {
     hashmap_expand(map);
   }
@@ -154,23 +153,23 @@ void hashmap_put(struct hashmap* map, void* key, void* data) {
 }
 
 long hashmap_capacity(const struct hashmap* map) {
-#ifdef ASSERT
+
   assert(map != NULL);
-#endif
+
   return map->capacity;
 }
 
 long hashmap_size(const struct hashmap* map) {
-#ifdef ASSERT
+
   assert(map != NULL);
-#endif
+
   return map->size;
 }
 
 void hashmap_expand(struct hashmap* map) {
-#ifdef ASSERT
+
   assert(map != NULL);
-#endif
+
   struct hashmap_element* array =
       calloc(map->capacity * 2, sizeof(struct hashmap_element));
   const long old_capacity     = map->capacity;
@@ -195,9 +194,7 @@ struct hashmap_iterator {
 };
 
 struct hashmap_iterator* hashmap_it_alloc() {
-#ifdef ASSERT
-  assert(map != NULL);
-#endif
+
   struct hashmap_iterator* it = malloc(sizeof(struct hashmap_iterator));
   it->index                   = 0;
   it->consumed                = 0;
@@ -205,24 +202,24 @@ struct hashmap_iterator* hashmap_it_alloc() {
   return it;
 }
 void hashmap_it_reset(struct hashmap_iterator* it) {
-#ifdef ASSERT
+
   assert(it != NULL);
-#endif
+
   it->index    = 0;
   it->consumed = 0;
 }
 void hashmap_it_set_map(struct hashmap_iterator* it, struct hashmap* map) {
-#ifdef ASSERT
+
   assert(it != NULL);
   assert(map != NULL);
-#endif
+
   it->map = map;
   hashmap_it_reset(it);
 }
 char hashmap_it_has_next(struct hashmap_iterator* it) {
-#ifdef ASSERT
+
   assert(it != NULL);
-#endif
+
   if (it->map == NULL || it->index >= it->map->capacity)
     return 0;
   if (it->consumed) {
@@ -236,17 +233,17 @@ char hashmap_it_has_next(struct hashmap_iterator* it) {
     el = &(it->map->array[it->index]);
   }
   if ((it->index) < capacity) {
-#ifdef ASSERT
+
     assert(el->used);
-#endif
+
     return 1;
   }
   return 0;
 }
 char hashmap_it_next(struct hashmap_iterator* it, void** key, void** value) {
-#ifdef ASSERT
+
   assert(it != NULL);
-#endif
+
   if (it->map == NULL || it->index >= it->map->capacity)
     return 0;
   if (it->consumed) {
@@ -260,9 +257,9 @@ char hashmap_it_next(struct hashmap_iterator* it, void** key, void** value) {
     el = &(it->map->array[it->index]);
   }
   if ((it->index) < capacity) {
-#ifdef ASSERT
+
     assert(el->used);
-#endif
+
     if (key != NULL)
       *key = el->key;
     if (value != NULL)
@@ -274,9 +271,9 @@ char hashmap_it_next(struct hashmap_iterator* it, void** key, void** value) {
 }
 char hashmap_it_skip(struct hashmap_iterator* it, void** key, void** value,
                      long n) {
-#ifdef ASSERT
+
   assert(it != NULL);
-#endif
+
   while (n > 0 && hashmap_it_has_next(it)) {
     hashmap_it_next(it, key, value);
     n--;
