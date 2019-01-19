@@ -7,18 +7,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "ethernet.h"
-#include "net_interface.h"
+#include "../ethernet.h"
+#include "../net_interface.h"
 
 #include "ip.h"
 
 #define DEBUG 0
 
+#include "../utils/checksum.h"
+#include "../utils/log.h"
+#include "../utils/print_utils.h"
 #include "arp.h"
 #include "icmp.h"
-#include "utils/checksum.h"
-#include "utils/log.h"
-#include "utils/print_utils.h"
 
 #define PROTOCOL_ICMP 1
 #define PROTOCOL_TCP 6

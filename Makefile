@@ -1,6 +1,6 @@
 # Makefile generated with gcmake v2.1.5 see https://github.com/Theomat/c-toolchain/blob/master/scripts/gcmake
 
-OBJ =  ./out/objects/main.o ./out/objects/ethernet.o ./out/objects/net_interface.o ./out/objects/arp.o ./out/objects/ip.o ./out/objects/tuntap_interface.o ./out/objects/print_utils.o ./out/objects/hashmap.o ./out/objects/icmp.o ./out/objects/checksum.o ./out/objects/runtime_utils.o
+OBJ =  ./out/objects/main.o ./out/objects/ethernet.o ./out/objects/net_interface.o ./out/objects/arp.o ./out/objects/ip.o ./out/objects/tuntap_interface.o ./out/objects/print_utils.o ./out/objects/hashmap.o ./out/objects/checksum.o ./out/objects/icmp.o ./out/objects/runtime_utils.o
 CC = gcc
 ARGS = -Wall -Werror -std=c99 
 LD_ARGS = 
@@ -41,31 +41,38 @@ reset_cov:
 
 
 ./out/objects/main.o: src/main.c src/ethernet.h src/net_interface.h src/utils/log.h \
- src/arp.h src/ip.h src/tuntap_interface.h ./out/objects/
+ src/protocols/arp.h src/protocols/ip.h src/tuntap_interface.h ./out/objects/
 	@$(CC) $$cc_args -c src/main.c -o ./out/objects/main.o
 ./out/objects/ethernet.o: src/ethernet.c src/utils/print_utils.h src/ethernet.h ./out/objects/
 	@$(CC) $$cc_args -c src/ethernet.c -o ./out/objects/ethernet.o
 ./out/objects/net_interface.o: src/net_interface.c src/ethernet.h \
  src/tuntap_interface.h src/utils/log.h src/net_interface.h ./out/objects/
 	@$(CC) $$cc_args -c src/net_interface.c -o ./out/objects/net_interface.o
-./out/objects/arp.o: src/arp.c src/collections/hashmap.h src/ethernet.h \
- src/net_interface.h src/utils/log.h src/utils/print_utils.h src/arp.h ./out/objects/
-	@$(CC) $$cc_args -c src/arp.c -o ./out/objects/arp.o
-./out/objects/ip.o: src/ip.c src/ethernet.h src/net_interface.h src/ip.h src/arp.h \
- src/icmp.h src/utils/checksum.h src/utils/log.h src/utils/print_utils.h ./out/objects/
-	@$(CC) $$cc_args -c src/ip.c -o ./out/objects/ip.o
+./out/objects/arp.o: src/protocols/arp.c src/protocols/../collections/hashmap.h \
+ src/protocols/../ethernet.h src/protocols/../net_interface.h \
+ src/protocols/../utils/log.h src/protocols/../utils/print_utils.h \
+ src/protocols/arp.h ./out/objects/
+	@$(CC) $$cc_args -c src/protocols/arp.c -o ./out/objects/arp.o
+./out/objects/ip.o: src/protocols/ip.c src/protocols/../ethernet.h \
+ src/protocols/../net_interface.h src/protocols/ip.h \
+ src/protocols/../utils/checksum.h src/protocols/../utils/log.h \
+ src/protocols/../utils/print_utils.h src/protocols/arp.h \
+ src/protocols/icmp.h ./out/objects/
+	@$(CC) $$cc_args -c src/protocols/ip.c -o ./out/objects/ip.o
 ./out/objects/tuntap_interface.o: src/tuntap_interface.c src/utils/log.h \
  src/utils/runtime_utils.h src/tuntap_interface.h ./out/objects/
 	@$(CC) $$cc_args -c src/tuntap_interface.c -o ./out/objects/tuntap_interface.o
 ./out/objects/print_utils.o: src/utils/print_utils.c src/utils/print_utils.h ./out/objects/
 	@$(CC) $$cc_args -c src/utils/print_utils.c -o ./out/objects/print_utils.o
-./out/objects/hashmap.o: src/collections/hashmap.c src/collections/hashmap.h ./out/objects/
-	@$(CC) $$cc_args -c src/collections/hashmap.c -o ./out/objects/hashmap.o
-./out/objects/icmp.o: src/icmp.c src/ethernet.h src/net_interface.h src/ip.h \
- src/utils/checksum.h src/utils/log.h src/icmp.h ./out/objects/
-	@$(CC) $$cc_args -c src/icmp.c -o ./out/objects/icmp.o
-./out/objects/checksum.o: src/utils/checksum.c ./out/objects/
-	@$(CC) $$cc_args -c src/utils/checksum.c -o ./out/objects/checksum.o
+./out/objects/hashmap.o: src/protocols/../collections/hashmap.c \
+ src/protocols/../collections/hashmap.h ./out/objects/
+	@$(CC) $$cc_args -c src/protocols/../collections/hashmap.c -o ./out/objects/hashmap.o
+./out/objects/checksum.o: src/protocols/../utils/checksum.c ./out/objects/
+	@$(CC) $$cc_args -c src/protocols/../utils/checksum.c -o ./out/objects/checksum.o
+./out/objects/icmp.o: src/protocols/icmp.c src/protocols/../ethernet.h \
+ src/protocols/../net_interface.h src/protocols/../utils/checksum.h \
+ src/protocols/../utils/log.h src/protocols/ip.h src/protocols/icmp.h ./out/objects/
+	@$(CC) $$cc_args -c src/protocols/icmp.c -o ./out/objects/icmp.o
 ./out/objects/runtime_utils.o: src/utils/runtime_utils.c src/utils/runtime_utils.h ./out/objects/
 	@$(CC) $$cc_args -c src/utils/runtime_utils.c -o ./out/objects/runtime_utils.o
 ./out/objects/test_hashmap.o: tests/test_hashmap.c tests/../src/collections/hashmap.h \

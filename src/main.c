@@ -10,8 +10,8 @@
 #include "net_interface.h"
 #include "utils/log.h"
 
-#include "arp.h"
-#include "ip.h"
+#include "protocols/arp.h"
+#include "protocols/ip.h"
 #include "tuntap_interface.h"
 
 #define BUFLEN 100

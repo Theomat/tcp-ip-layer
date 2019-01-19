@@ -5,14 +5,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "ethernet.h"
-#include "net_interface.h"
+#include "../ethernet.h"
+#include "../net_interface.h"
 
 #define DEBUG 0
 
+#include "../utils/checksum.h"
+#include "../utils/log.h"
 #include "ip.h"
-#include "utils/checksum.h"
-#include "utils/log.h"
 
 #include "icmp.h"
 //------------------------------------------------------------------------------

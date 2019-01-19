@@ -9,11 +9,11 @@
 
 #define DEBUG 0
 
-#include "collections/hashmap.h"
-#include "ethernet.h"
-#include "net_interface.h"
-#include "utils/log.h"
-#include "utils/print_utils.h"
+#include "../collections/hashmap.h"
+#include "../ethernet.h"
+#include "../net_interface.h"
+#include "../utils/log.h"
+#include "../utils/print_utils.h"
 
 #include "arp.h"
 //------------------------------------------------------------------------------
