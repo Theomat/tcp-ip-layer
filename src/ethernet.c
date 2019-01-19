@@ -49,6 +49,8 @@ void ethernet_header_set(struct eth_header* header, uint16_t type,
                          char* payload, uint32_t len, unsigned char* src_mac,
                          unsigned char* dst_mac) {
   assert(header != NULL);
+  assert(src_mac != NULL);
+  assert(payload != NULL);
   header->ether_type = htons(type);
   memcpy(header->dst_mac, dst_mac, 6);
   memcpy(header->src_mac, src_mac, 6);

@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+ping -4 -I tap0 -a -f -c 10 -i 1 -O -v 10.0.0.4

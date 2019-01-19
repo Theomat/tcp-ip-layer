@@ -6,13 +6,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DEBUG 1
-
 #include "ethernet.h"
 #include "net_interface.h"
 #include "utils/log.h"
 
 #include "arp.h"
+#include "ip.h"
 #include "tuntap_interface.h"
 
 #define BUFLEN 100
@@ -30,6 +29,7 @@ bool handle_frame(struct net_interface* interface, struct eth_header* header) {
     return true;
   case ETH_P_IP:
     LOG_DEBUG("Found IPv4\n");
+    ip_receive(interface, header);
     break;
   default:
     // ERROR("Unrecognized ethertype %u\n", ethernet_type(header));
@@ -38,9 +38,16 @@ bool handle_frame(struct net_interface* interface, struct eth_header* header) {
   return false;
 }
 
+void destroy() {
+  arp_destroy();
+  net_interface_destroy();
+}
+
 int main(int argc, char** argv) {
   char buffer[BUFLEN] = {};
   char* dev           = calloc(10, 1);
+
+  atexit(&destroy);
 
   // Init everything
   tun_init(dev);

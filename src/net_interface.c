@@ -9,6 +9,8 @@
 #include <string.h>
 #include <sys/ioctl.h>
 
+#define DEBUG 0
+
 #include "ethernet.h"
 #include "tuntap_interface.h"
 #include "utils/log.h"
@@ -38,8 +40,10 @@ static unsigned char broadcast[6]    = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 //                           SEND DATA
 //------------------------------------------------------------------------------
 void net_interface_send(struct net_interface* interface, char* content,
-                        uint32_t len, unsigned char* dst_mac) {
+                        uint32_t len, unsigned char* dst_mac,
+                        uint16_t protocol) {
   assert(interface != NULL);
+  assert(dst_mac != NULL);
   // Ensure we have enough size of payload in our ethernet header
   if (len > max_payload_size || max_payload_size == 0) {
     if (eth_header != NULL)
@@ -47,10 +51,10 @@ void net_interface_send(struct net_interface* interface, char* content,
     eth_header       = ethernet_header_alloc(len);
     max_payload_size = len;
   }
-  ethernet_header_set(eth_header, ETH_P_ARP, content, len, interface->mac,
+  ethernet_header_set(eth_header, protocol, content, len, interface->mac,
                       dst_mac);
 #if DEBUG
-  printf("[DEBUG][SEND] Payload size=%u ", len);
+  printf("[DEBUG] [NET-IF] Sent payload size=%u ", len);
   ethernet_fprint(eth_header, stdout);
   printf("\n");
 #endif
@@ -58,8 +62,8 @@ void net_interface_send(struct net_interface* interface, char* content,
   tun_write((char*)eth_header, len + ETHERNET_HEADER_SIZE);
 }
 void net_interface_broadcast(struct net_interface* interface, char* content,
-                             uint32_t len) {
-  net_interface_send(interface, content, len, broadcast);
+                             uint32_t len, uint16_t protocol) {
+  net_interface_send(interface, content, len, broadcast, protocol);
 }
 //------------------------------------------------------------------------------
 //                           ALLOCATION

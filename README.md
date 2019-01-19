@@ -12,3 +12,7 @@ Implementation of a tcp-ip-layer
 
 4. [ntohs](https://linux.die.net/man/3/ntohs), _Linux man_
   - [Network byte order and Host byte order](https://www.ibm.com/support/knowledgecenter/en/SSB27U_6.4.0/com.ibm.zvm.v640.kiml0/asonetw.htm), _IBM_
+
+5. [Internet Protocol v4 RFC791](https://tools.ietf.org/html/rfc791), _Internet Standard_
+
+6. [Internet Control Message Protocol RFC792](https://www.ietf.org/rfc/rfc792.txt), _Network Working Group_
