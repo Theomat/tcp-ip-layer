@@ -1,5 +1,13 @@
 # tcp-ip-layer
-Implementation of a tcp-ip-layer
+Implementation of a TCP-IP layer.
+
+## Implemented
+
+- Ethernet Frames
+- ARP
+- IPv4
+- ICMPv4 :
+  - ECHO Request
 
 
 ## Sources
@@ -15,4 +23,4 @@ Implementation of a tcp-ip-layer
 
 5. [Internet Protocol v4 RFC791](https://tools.ietf.org/html/rfc791), _Internet Standard_
 
-6. [Internet Control Message Protocol RFC792](https://www.ietf.org/rfc/rfc792.txt), _Network Working Group_
+6. [Internet Control Message Protocol v4 RFC792](https://www.ietf.org/rfc/rfc792.txt), _Network Working Group_
