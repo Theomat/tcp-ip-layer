@@ -1,15 +1,19 @@
 #include <arpa/inet.h>
 #include <assert.h>
+#include <linux/if_ether.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#define DEBUG 0
+
 #include "collections/hashmap.h"
 #include "ethernet.h"
 #include "net_interface.h"
 #include "utils/log.h"
+#include "utils/print_utils.h"
 
 #include "arp.h"
 //------------------------------------------------------------------------------
@@ -57,18 +61,14 @@ void arp_header_fprint(struct arp_header* header, FILE* fd) {
 static struct hashmap* transition_table = NULL;
 // The hash should be improved, because pro_type has little to no impact on the
 // hash itself
-static unsigned long hash(const void* ptr) {
-  unsigned long u = *((uint64_t*)ptr);
-  return u;
-}
+static unsigned long hash(const void* ptr) { return *((uint64_t*)ptr); }
 static long equals(const void* ptr_a, const void* ptr_b) {
   uint64_t* a = ((uint64_t*)ptr_a);
   uint64_t* b = ((uint64_t*)ptr_b);
-  return a == b;
+  return *a == *b;
 }
 static uint64_t to_key(uint16_t pro_type, uint32_t src_ip) {
-  uint64_t out = pro_type;
-  return (out << 32) + src_ip;
+  return (((uint64_t)pro_type << 32)) + src_ip;
 }
 
 static bool is_in_transition_table(uint16_t pro_type, uint32_t src_ip) {
@@ -84,7 +84,7 @@ static void set_in_transition_table(uint16_t pro_type, uint32_t src_ip,
   dst_mac = hashmap_get(transition_table, &key);
   assert(dst_mac != NULL);
   memcpy(dst_mac, src_mac, 6);
-  hashmap_put(transition_table, &key, &dst_mac);
+  hashmap_put(transition_table, &key, dst_mac);
 }
 static void add_to_transition_table(uint16_t pro_type, uint32_t src_ip,
                                     unsigned char* src_mac) {
@@ -93,7 +93,7 @@ static void add_to_transition_table(uint16_t pro_type, uint32_t src_ip,
 
   *dst_key = to_key(pro_type, src_ip);
   memcpy(dst_mac, src_mac, 6);
-  hashmap_put(transition_table, &dst_key, &dst_mac);
+  hashmap_put(transition_table, dst_key, dst_mac);
 }
 //------------------------------------------------------------------------------
 //                              ARP LIFECYCLE
@@ -107,15 +107,27 @@ void arp_init() {
 void arp_destroy() {
   struct hashmap_iterator* it = hashmap_it_alloc();
   // Init them as anything but NULL
-  void** key  = (void**)1;
-  void** cell = (void**)2;
-
+  void** key  = calloc(1, sizeof(void**));
+  void** cell = calloc(1, sizeof(void**));
+  LOG_DEBUG("[ARP] Dumping cache %ld :\n", hashmap_size(transition_table));
   hashmap_it_set_map(it, transition_table);
   while (hashmap_it_has_next(it)) {
     hashmap_it_next(it, key, cell);
-    free(key);
-    free(cell);
+
+#if DEBUG
+    uint64_t ip_and_pro = *((uint64_t*)*key);
+    LOG_DEBUG("[ARP] [CACHE] IP=");
+    ipv4_fprint(stdout,
+                ip_and_pro); // Only prints the lowest 32 bits so no issue
+    printf(" MAC=");
+    mac_fprint(stdout, ((unsigned char*)*cell));
+    printf("\n");
+#endif
+    free(*key);
+    free(*cell);
   }
+  free(key);
+  free(cell);
   free(it);
   free_hashmap(transition_table);
 }
@@ -143,7 +155,7 @@ static void arp_reply(struct net_interface* interface,
   // same hardware on which the request was received.
   net_interface_send(interface, (char*)header,
                      sizeof(struct arp_header) + sizeof(struct arp_ipv4),
-                     content->dst_mac);
+                     content->dst_mac, ETH_P_ARP);
 }
 //------------------------------------------------------------------------------
 //                             ARP RESOLVE
@@ -163,7 +175,7 @@ void arp_receive(struct net_interface* interface,
   header->opcode   = ntohs(header->opcode);
 
 #if DEBUG
-  printf("[DEBUG][RESOLVE]");
+  printf("[DEBUG] [ARP] Received ");
   arp_header_fprint(header, stdout);
   printf("\n");
 #endif
@@ -182,6 +194,14 @@ void arp_receive(struct net_interface* interface,
       // Check we are the target
       if (content->dst_ip == net_interface_get_ip(interface)) {
         if (!merge_flag) {
+#if DEBUG
+          LOG_DEBUG("[ARP] [CACHE] Added ");
+          ipv4_fprint(stdout, content->src_ip);
+          printf(" matching MAC ");
+          mac_fprint(stdout, content->src_mac);
+          printf(".\n");
+#endif
+
           add_to_transition_table(header->pro_type, content->src_ip,
                                   content->src_mac);
         }
@@ -204,13 +224,19 @@ void arp_receive(struct net_interface* interface,
   }
 }
 // Returns the mac address if is in the arp cache
-// If NOT returns NULL and send an ARP request packet to resolve the specific ip
+// If NOT returns NULL and send an ARP request packet to resolve the specific
+// ip
 unsigned char* arp_resolve_ipv4(struct net_interface* interface,
                                 uint32_t ipv4) {
   if (is_in_transition_table(ARP_IPV4, ipv4)) {
     uint64_t key = to_key(ARP_IPV4, ipv4);
     return hashmap_get(transition_table, &key);
   } else {
+#if DEBUG
+    LOG_DEBUG("[ARP] ");
+    ipv4_fprint(stdout, ipv4);
+    printf(" could not be resolved directly... Sending packet.\n");
+#endif
     // Not in transition table so we should send a broadcast
     struct arp_header* header =
         calloc(1, sizeof(struct arp_header) + sizeof(struct arp_ipv4));
@@ -237,8 +263,8 @@ unsigned char* arp_resolve_ipv4(struct net_interface* interface,
     memcpy(content->src_mac, net_interface_get_mac(interface), 6);
 
     net_interface_broadcast(interface, (char*)header,
-                            sizeof(struct arp_header) +
-                                sizeof(struct arp_ipv4));
+                            sizeof(struct arp_header) + sizeof(struct arp_ipv4),
+                            ETH_P_ARP);
     free(header);
     return NULL;
   }

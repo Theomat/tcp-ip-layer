@@ -63,9 +63,8 @@ static long hashmap_indexof(const struct hashmap* map, const void* key) {
     if (map->equals(key, el->key)) {
       break;
     } else {
-      index++;
-      index &= (map->capacity) - 1;
-      el = &(map->array[index]);
+      index = (index + 1) & (map->capacity - 1);
+      el    = &(map->array[index]);
     }
   }
   return index;
@@ -122,8 +121,10 @@ void hashmap_clear(struct hashmap* map) {
 
   assert(map != NULL);
 
+  struct hashmap_element* el = NULL;
   for (unsigned long i = 0; i < map->capacity; i++) {
-    (&(map->array[i]))->used = 0;
+    el       = &(map->array[i]);
+    el->used = 0;
   }
   map->size = 0;
 }
@@ -145,10 +146,10 @@ void hashmap_put(struct hashmap* map, void* key, void* data) {
   const long index           = hashmap_indexof(map, key);
   struct hashmap_element* el = &(map->array[index]);
   el->value                  = data;
-  if (!el->used) {
-    el->key = key;
-    map->size++;
+  if (!(el->used)) {
+    el->key  = key;
     el->used = 1;
+    map->size++;
   }
 }
 
