@@ -86,7 +86,7 @@ static void receive_echo_request(struct net_interface* interface,
 #endif
 
   ip_header_set_dst(ip_header, ip_header_get_src_addr(ip_header));
-  ip_header_set_src(ip_header, net_interface_get_ip(interface));
+  ip_header_set_src(ip_header, ntohl(net_interface_get_ip(interface)));
 
   ip_send_packet(interface, ip_header);
 }

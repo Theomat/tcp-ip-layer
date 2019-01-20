@@ -24,6 +24,9 @@ struct net_interface {
 //------------------------------------------------------------------------------
 //                               GETTERS
 //------------------------------------------------------------------------------
+/**
+  IN NETWORK BYTE ORDER
+**/
 uint32_t net_interface_get_ip(struct net_interface* interface) {
   assert(interface != NULL);
   return interface->ip;

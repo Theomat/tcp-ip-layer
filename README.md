@@ -24,3 +24,5 @@ Implementation of a TCP-IP layer.
 5. [Internet Protocol v4 RFC791](https://tools.ietf.org/html/rfc791), _Internet Standard_
 
 6. [Internet Control Message Protocol v4 RFC792](https://www.ietf.org/rfc/rfc792.txt), _Network Working Group_
+
+7. [Transmission Control Protocol RFC793](https://tools.ietf.org/html/rfc793), _Internet Standard_

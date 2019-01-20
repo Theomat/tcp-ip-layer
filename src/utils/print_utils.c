@@ -9,6 +9,6 @@ void mac_fprint(FILE* fd, unsigned char* mac) {
 }
 
 void ipv4_fprint(FILE* fd, uint32_t ip) {
-  fprintf(fd, "%u.%u.%u.%u", ((ip >> 0) & 255), ((ip >> 8) & 255),
-          ((ip >> 16) & 255), ((ip >> 24) & 255));
+  fprintf(fd, "%u.%u.%u.%u", ((ip >> 24) & 255), ((ip >> 16) & 255),
+          ((ip >> 8) & 255), ((ip >> 0) & 255));
 }

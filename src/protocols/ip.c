@@ -19,6 +19,8 @@
 #include "../utils/print_utils.h"
 #include "arp.h"
 #include "icmp.h"
+#include "tcp.h"
+#include "udp.h"
 
 #define PROTOCOL_ICMP 1
 #define PROTOCOL_TCP 6
@@ -76,7 +78,10 @@ uint8_t ip_header_get_protocol(struct ip_header* header) {
   assert(header != NULL);
   return header->protocol;
 }
-
+uint16_t ip_header_get_total_length(struct ip_header* header) {
+  assert(header != NULL);
+  return header->len;
+}
 uint16_t ip_header_get_payload_length(struct ip_header* header) {
   assert(header != NULL);
   return header->len - sizeof(struct ip_header);
@@ -169,7 +174,9 @@ void ip_receive(struct net_interface* interface,
     return;
   }
 
-  header->len = ntohs(header->len);
+  header->src_addr = ntohl(header->src_addr);
+  header->dst_addr = ntohl(header->dst_addr);
+  header->len      = ntohs(header->len);
 
 #if DEBUG
   printf("[DEBUG] [IPv4] Received ");
@@ -179,10 +186,12 @@ void ip_receive(struct net_interface* interface,
 
   switch (ip_header_get_protocol(header)) {
   case PROTOCOL_TCP:
-    ERROR("IPv4: Unsupported protocol TCP\n");
+    LOG_DEBUG("[IPv4] Received TCP packet.\n");
+    tcp_receive(interface, header);
     break;
   case PROTOCOL_UDP:
-    ERROR("IPv4: Unsupported protocol UDP\n");
+    LOG_DEBUG("[IPv4] Received UDP packet.\n");
+    udp_receive(interface, header);
     break;
   case PROTOCOL_ICMP:
     LOG_DEBUG("[IPv4] Received ICMP packet.\n");
@@ -200,8 +209,9 @@ void ip_send_packet(struct net_interface* interface, struct ip_header* header) {
   assert(interface != NULL);
   // TODO make a kind of queue to wait for the ip to be resolved before sending
   // data
+  uint32_t net_dst_addr  = htonl(header->dst_addr);
   uint32_t real_len      = header->len;
-  unsigned char* dst_mac = arp_resolve_ipv4(interface, header->dst_addr);
+  unsigned char* dst_mac = arp_resolve_ipv4(interface, net_dst_addr);
   if (dst_mac == NULL) {
     ERROR("IPv4: Could not resolve MAC address for ");
     ipv4_fprint(stderr, header->dst_addr);
@@ -215,7 +225,9 @@ void ip_send_packet(struct net_interface* interface, struct ip_header* header) {
   printf("\n");
 #endif
 
-  header->len = htons(header->len);
+  header->src_addr = htonl(header->src_addr);
+  header->dst_addr = net_dst_addr;
+  header->len      = htons(header->len);
   ip_header_update_checksum(header);
 
   net_interface_send(interface, (char*)header, real_len, dst_mac, ETH_P_IP);
@@ -225,7 +237,7 @@ void ip_send(struct net_interface* interface, uint32_t dst, char* payload,
   assert(interface != NULL);
   unsigned char** payload_dst = calloc(1, sizeof(unsigned char**));
   struct ip_header* ip_header = ip_header_alloc(
-      len, protocol, net_interface_get_ip(interface), dst, payload_dst);
+      len, protocol, ntohl(net_interface_get_ip(interface)), dst, payload_dst);
 
   memcpy(*payload_dst, payload, len);
   free(payload_dst);

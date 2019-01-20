@@ -14,6 +14,7 @@ struct ip_header* ip_header_alloc(uint16_t len, uint8_t protocol, uint32_t src,
 //                                    GETTERS
 //------------------------------------------------------------------------------
 uint8_t ip_header_get_protocol(struct ip_header* header);
+uint16_t ip_header_get_total_length(struct ip_header* header);
 uint16_t ip_header_get_payload_length(struct ip_header* header);
 uint8_t ip_header_get_ttl(struct ip_header* header);
 uint32_t ip_header_get_src_addr(struct ip_header* header);
