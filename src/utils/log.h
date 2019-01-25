@@ -1,5 +1,9 @@
+#include <stdint.h>
+#include <stdio.h>
 #ifndef LOG_H
 #define LOG_H
+void mac_fprint(FILE* fd, unsigned char* mac);
+void ipv4_fprint(FILE* fd, uint32_t ip);
 
 #define INFO(args...)                                                          \
   printf("[INFO] ");                                                           \

@@ -1,6 +1,6 @@
 # Makefile generated with gcmake v2.1.5 see https://github.com/Theomat/c-toolchain/blob/master/scripts/gcmake
 
-OBJ =  ./out/objects/main.o ./out/objects/ethernet.o ./out/objects/net_interface.o ./out/objects/arp.o ./out/objects/ip.o ./out/objects/tun_device.o ./out/objects/print_utils.o ./out/objects/hashmap.o ./out/objects/protocols.o ./out/objects/icmp.o ./out/objects/tcp.o ./out/objects/udp.o ./out/objects/runtime_utils.o
+OBJ =  ./out/objects/main.o ./out/objects/ethernet.o ./out/objects/net_interface.o ./out/objects/arp.o ./out/objects/ip.o ./out/objects/tun_device.o ./out/objects/log.o ./out/objects/protocols.o ./out/objects/hashmap.o ./out/objects/icmp.o ./out/objects/tcp.o ./out/objects/udp.o ./out/objects/runtime_utils.o
 CC = gcc
 ARGS = -Wall -Werror -std=c99 
 LD_ARGS = -pthread
@@ -45,47 +45,42 @@ reset_cov:
  src/tun_device.h src/utils/log.h ./out/objects/
 	@$(CC) $$cc_args -c src/main.c -o ./out/objects/main.o
 ./out/objects/ethernet.o: src/./protocols/ethernet.c src/./protocols/ethernet.h \
- src/./protocols/../utils/print_utils.h ./out/objects/
+ src/./protocols/../utils/log.h ./out/objects/
 	@$(CC) $$cc_args -c src/./protocols/ethernet.c -o ./out/objects/ethernet.o
 ./out/objects/net_interface.o: src/net_interface.c src/net_interface.h \
- src/./protocols/ethernet.h src/tun_device.h src/utils/log.h ./out/objects/
+ src/./protocols/ethernet.h src/./utils/protocols.h src/tun_device.h \
+ src/utils/log.h ./out/objects/
 	@$(CC) $$cc_args -c src/net_interface.c -o ./out/objects/net_interface.o
 ./out/objects/arp.o: src/protocols/arp.c src/protocols/arp.h src/protocols/ethernet.h \
  src/protocols/../collections/hashmap.h src/protocols/../net_interface.h \
- src/protocols/../utils/log.h src/protocols/../utils/print_utils.h \
- src/protocols/../utils/protocols.h ./out/objects/
+ src/protocols/../utils/log.h src/protocols/../utils/protocols.h ./out/objects/
 	@$(CC) $$cc_args -c src/protocols/arp.c -o ./out/objects/arp.o
 ./out/objects/ip.o: src/protocols/ip.c src/protocols/ip.h src/protocols/ethernet.h \
  src/protocols/../net_interface.h src/protocols/../utils/log.h \
- src/protocols/../utils/print_utils.h src/protocols/../utils/protocols.h \
- src/protocols/arp.h src/protocols/icmp.h src/protocols/tcp.h \
- src/protocols/udp.h ./out/objects/
+ src/protocols/../utils/protocols.h src/protocols/arp.h \
+ src/protocols/icmp.h src/protocols/tcp.h src/protocols/udp.h ./out/objects/
 	@$(CC) $$cc_args -c src/protocols/ip.c -o ./out/objects/ip.o
 ./out/objects/tun_device.o: src/tun_device.c src/tun_device.h src/utils/log.h \
  src/utils/runtime_utils.h ./out/objects/
 	@$(CC) $$cc_args -c src/tun_device.c -o ./out/objects/tun_device.o
-./out/objects/print_utils.o: src/./protocols/../utils/print_utils.c \
- src/./protocols/../utils/print_utils.h ./out/objects/
-	@$(CC) $$cc_args -c src/./protocols/../utils/print_utils.c -o ./out/objects/print_utils.o
+./out/objects/log.o: src/utils/log.c src/utils/log.h ./out/objects/
+	@$(CC) $$cc_args -c src/utils/log.c -o ./out/objects/log.o
+./out/objects/protocols.o: src/./utils/protocols.c src/./utils/protocols.h ./out/objects/
+	@$(CC) $$cc_args -c src/./utils/protocols.c -o ./out/objects/protocols.o
 ./out/objects/hashmap.o: src/protocols/../collections/hashmap.c \
  src/protocols/../collections/hashmap.h ./out/objects/
 	@$(CC) $$cc_args -c src/protocols/../collections/hashmap.c -o ./out/objects/hashmap.o
-./out/objects/protocols.o: src/protocols/../utils/protocols.c \
- src/protocols/../utils/protocols.h ./out/objects/
-	@$(CC) $$cc_args -c src/protocols/../utils/protocols.c -o ./out/objects/protocols.o
 ./out/objects/icmp.o: src/protocols/icmp.c src/protocols/icmp.h src/protocols/ip.h \
  src/protocols/ethernet.h src/protocols/../net_interface.h \
  src/protocols/../utils/log.h src/protocols/../utils/protocols.h ./out/objects/
 	@$(CC) $$cc_args -c src/protocols/icmp.c -o ./out/objects/icmp.o
 ./out/objects/tcp.o: src/protocols/tcp.c src/protocols/tcp.h src/protocols/ip.h \
  src/protocols/ethernet.h src/protocols/../net_interface.h \
- src/protocols/../utils/log.h src/protocols/../utils/print_utils.h \
- src/protocols/../utils/protocols.h ./out/objects/
+ src/protocols/../utils/log.h src/protocols/../utils/protocols.h ./out/objects/
 	@$(CC) $$cc_args -c src/protocols/tcp.c -o ./out/objects/tcp.o
 ./out/objects/udp.o: src/protocols/udp.c src/protocols/../net_interface.h \
- src/protocols/../utils/log.h src/protocols/../utils/print_utils.h \
- src/protocols/../utils/protocols.h src/protocols/ip.h \
- src/protocols/ethernet.h src/protocols/udp.h ./out/objects/
+ src/protocols/../utils/log.h src/protocols/../utils/protocols.h \
+ src/protocols/ip.h src/protocols/ethernet.h src/protocols/udp.h ./out/objects/
 	@$(CC) $$cc_args -c src/protocols/udp.c -o ./out/objects/udp.o
 ./out/objects/runtime_utils.o: src/utils/runtime_utils.c src/utils/runtime_utils.h ./out/objects/
 	@$(CC) $$cc_args -c src/utils/runtime_utils.c -o ./out/objects/runtime_utils.o

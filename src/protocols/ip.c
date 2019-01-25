@@ -10,7 +10,6 @@
 
 #include "../net_interface.h"
 #include "../utils/log.h"
-#include "../utils/print_utils.h"
 #include "../utils/protocols.h"
 #include "arp.h"
 #include "icmp.h"
