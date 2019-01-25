@@ -1,11 +1,11 @@
-#include <stdint.h>
+#include "protocols.h"
 /* Compute Internet Checksum for "count" bytes
  *         beginning at location "addr".
  * Taken from https://tools.ietf.org/html/rfc1071
  */
-uint16_t internet_checksum(void* addr, int count) {
+uint16_t internet_checksum(const void* addr, unsigned int count) {
   register uint32_t sum = 0;
-  uint16_t* ptr         = addr;
+  const uint16_t* ptr   = addr;
 
   while (count > 1) {
     /*  This is the inner loop */

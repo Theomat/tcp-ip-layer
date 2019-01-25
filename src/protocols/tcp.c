@@ -1,41 +1,16 @@
+#include "tcp.h"
 #include <arpa/inet.h>
 #include <assert.h>
 #include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #define DEBUG 1
 
-#include "../ethernet.h"
 #include "../net_interface.h"
-
-#include "../utils/checksum.h"
 #include "../utils/log.h"
 #include "../utils/print_utils.h"
-#include "ip.h"
+#include "../utils/protocols.h"
 
-#include "tcp.h"
-
-#define TCP_CONTROL_FIN 1
-#define TCP_CONTROL_SYN 32
-#define TCP_CONTROL_RST 4
-#define TCP_CONTROL_PSH 8
-#define TCP_CONTROL_ACK 16
-#define TCP_CONTROL_URG 2
-
-struct tcp_header {
-  uint16_t src_port;
-  uint16_t dst_port;
-  uint32_t seq_num;
-  uint32_t ack_num;
-  // Data Offset (4bits) Reserved(6bits) Letters(6bits)
-  uint16_t reserved;
-  uint16_t window;
-  uint16_t checksum;
-  uint16_t urgent_ptr;
-  uint32_t options_and_padding;
-} __attribute__((packed));
 //------------------------------------------------------------------------------
 //                              LIFECYCLE
 //------------------------------------------------------------------------------
@@ -43,7 +18,7 @@ struct tcp_header {
 //------------------------------------------------------------------------------
 //                              PRINT
 //------------------------------------------------------------------------------
-void tcp_header_fprint(FILE* fd, struct tcp_header* header) {
+void tcp_header_fprint(FILE* fd, const struct tcp_header* header) {
   assert(header != NULL);
   fprintf(fd,
           "TCP header [src_port=%u, dst_port=%u, seq_num=%u, ack_num=%u, "
@@ -55,41 +30,6 @@ void tcp_header_fprint(FILE* fd, struct tcp_header* header) {
           header->urgent_ptr, (header->options_and_padding >> 8));
 }
 //------------------------------------------------------------------------------
-//                                    GETTERS
-//------------------------------------------------------------------------------
-uint32_t tcp_header_get_sequence(struct tcp_header* header) {
-  assert(header != NULL);
-  return header->seq_num;
-}
-uint32_t tcp_header_get_ack(struct tcp_header* header) {
-  assert(header != NULL);
-  return header->ack_num;
-}
-uint8_t tcp_header_get_data_offset(struct tcp_header* header) {
-  assert(header != NULL);
-  return ((header->reserved >> 12) & 0xf);
-}
-uint8_t tcp_header_get_control_bits(struct tcp_header* header) {
-  assert(header != NULL);
-  return (header->reserved & 63);
-}
-uint16_t tcp_header_get_window(struct tcp_header* header) {
-  assert(header != NULL);
-  return header->window;
-}
-uint16_t tcp_header_get_src_port(struct tcp_header* header) {
-  assert(header != NULL);
-  return header->src_port;
-}
-uint16_t tcp_header_get_dst_port(struct tcp_header* header) {
-  assert(header != NULL);
-  return header->dst_port;
-}
-unsigned char* tcp_header_get_payload(struct tcp_header* header) {
-  assert(header != NULL);
-  return (unsigned char*)header + sizeof(struct tcp_header);
-}
-//------------------------------------------------------------------------------
 //                         CHECK
 //------------------------------------------------------------------------------
 static bool tcp_header_check(struct ip_header* ip_header,
@@ -97,23 +37,33 @@ static bool tcp_header_check(struct ip_header* ip_header,
   assert(header != NULL);
   uint32_t len = ip_header_get_payload_length(ip_header);
   uint32_t sum = ~internet_checksum((char*)header, len) + htons(len) +
-                 htons(PROTOCOL_TCP) +
-                 htonl(ip_header_get_src_addr(ip_header)) +
-                 htonl(ip_header_get_dst_addr(ip_header));
+                 htons(PROTOCOL_TCP) + htonl(ip_header->src_addr) +
+                 htonl(ip_header->dst_addr);
   while (sum >> 16)
     sum = (sum & 0xffff) + (sum >> 16);
 
   return (uint16_t)(sum + 2) == 0;
 }
+
+void tcp_header_ntoh(struct tcp_header* header) {
+  header->seq_num  = ntohs(header->seq_num);
+  header->ack_num  = ntohs(header->ack_num);
+  header->dst_port = ntohs(header->dst_port);
+  header->src_port = ntohs(header->src_port);
+}
+void tcp_header_hton(struct tcp_header* header) {
+  header->seq_num  = htons(header->seq_num);
+  header->ack_num  = htons(header->ack_num);
+  header->dst_port = htons(header->dst_port);
+  header->src_port = htons(header->src_port);
+}
 //------------------------------------------------------------------------------
 //                              RECEPTION
 //------------------------------------------------------------------------------
-void tcp_receive(struct net_interface* interface, struct ip_header* ip_header) {
-  assert(interface != NULL);
+void tcp_receive(struct ip_header* ip_header) {
   assert(ip_header != NULL);
 
-  struct tcp_header* header =
-      (struct tcp_header*)ip_header_get_payload(ip_header);
+  struct tcp_header* header = (struct tcp_header*)ip_header->payload;
 
   if (!tcp_header_check(ip_header, header)) {
     ERROR("TCP: Invalid checksum for packet : ");
@@ -122,10 +72,7 @@ void tcp_receive(struct net_interface* interface, struct ip_header* ip_header) {
     return;
   }
 
-  header->seq_num  = ntohs(header->seq_num);
-  header->ack_num  = ntohs(header->ack_num);
-  header->dst_port = ntohs(header->dst_port);
-  header->src_port = ntohs(header->src_port);
+  tcp_header_ntoh(header);
 
 #if DEBUG
   LOG_DEBUG("[TCP] Received ");

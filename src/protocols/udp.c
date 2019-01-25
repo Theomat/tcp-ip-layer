@@ -5,12 +5,10 @@
 
 #define DEBUG 1
 
-#include "../ethernet.h"
 #include "../net_interface.h"
-
-#include "../utils/checksum.h"
 #include "../utils/log.h"
 #include "../utils/print_utils.h"
+#include "../utils/protocols.h"
 #include "ip.h"
 
 #include "udp.h"
@@ -24,7 +22,7 @@ struct udp_header {
 //------------------------------------------------------------------------------
 //                              PRINT
 //------------------------------------------------------------------------------
-void udp_header_fprint(FILE* fd, struct udp_header* header) {
+void udp_header_fprint(FILE* fd, const struct udp_header* header) {
   assert(header != NULL);
   fprintf(fd, "UDP header [src_port=%u, dst_port=%u, len=%lu(%u), checksum=%u]",
           header->src_port, header->dst_port,
@@ -34,13 +32,10 @@ void udp_header_fprint(FILE* fd, struct udp_header* header) {
 //------------------------------------------------------------------------------
 //                              RECEPTION
 //------------------------------------------------------------------------------
-void udp_receive(struct net_interface* interface, struct ip_header* ip_header) {
-  assert(interface != NULL);
+void udp_receive(struct ip_header* ip_header) {
   assert(ip_header != NULL);
 
-  struct udp_header* header =
-      (struct udp_header*)ip_header_get_payload(ip_header);
-
+  struct udp_header* header = (struct udp_header*)ip_header->payload;
 #if DEBUG
   LOG_DEBUG("[UDP] Received ");
   udp_header_fprint(stdout, header);

@@ -1,35 +1,40 @@
 #include <errno.h>
 #include <linux/if_ether.h>
+#include <pthread.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
-#include "ethernet.h"
+#define DEBUG 0
+
+#include "./protocols/ethernet.h"
 #include "net_interface.h"
-#include "utils/log.h"
-
 #include "protocols/arp.h"
 #include "protocols/ip.h"
-#include "tuntap_interface.h"
+#include "tun_device.h"
+#include "utils/log.h"
 
 #define BUFLEN 100
 
-bool handle_frame(struct net_interface* interface, struct eth_header* header) {
-
-  switch (ethernet_get_type(header)) {
+bool handle_frame(struct eth_header* header) {
+  switch (header->ether_type) {
   case ETH_P_ARP:
 #if DEBUG
-    printf("[DEBUG][RECV] ");
+    printf("[DEBUG] [ETH] Received (ARP) ");
     ethernet_fprint(header, stdout);
     printf("\n");
 #endif
-    arp_receive(interface, header);
+    arp_receive(header);
     return true;
   case ETH_P_IP:
-    LOG_DEBUG("Found IPv4\n");
-    ip_receive(interface, header);
+#if DEBUG
+    printf("[DEBUG] [ETH] Received (IP) ");
+    ethernet_fprint(header, stdout);
+    printf("\n");
+#endif
+    ip_receive(header);
     break;
   default:
     // ERROR("Unrecognized ethertype %u\n", ethernet_type(header));
@@ -38,35 +43,49 @@ bool handle_frame(struct net_interface* interface, struct eth_header* header) {
   return false;
 }
 
+void* process_io(void* buff) {
+  char* buffer              = buff;
+  struct eth_header* header = (struct eth_header*)(buffer);
+  while (1) {
+    if (net_interface_read(buffer, BUFLEN) < 0) {
+      ERROR("Read from tun_fd: %s\n", strerror(errno));
+    }
+    header = (struct eth_header*)(buffer);
+    eth_header_ntoh(header);
+    handle_frame(header);
+  }
+  return NULL;
+}
+
 void destroy() {
   arp_destroy();
   net_interface_destroy();
 }
 
-int main(int argc, char** argv) {
-  char buffer[BUFLEN] = {};
-  char* dev           = calloc(10, 1);
+#define THREADS 10
+static pthread_t threads[THREADS] = {};
+static char* buffers[THREADS]     = {};
 
+int main(int argc, char** argv) {
+  char dev[10] = {};
   atexit(&destroy);
 
   // Init everything
   tun_init(dev);
   INFO("Created TUN interface : %s\n", dev);
-  struct net_interface* interface =
-      net_interface_alloc("10.0.0.4", "00:0c:29:6d:50:25");
+  net_interface_init("10.0.0.4", "00:0c:29:6d:50:25");
   arp_init();
   INFO("Init successful\n");
 
-  while (1) {
-    if (tun_read(buffer, BUFLEN) < 0) {
-      ERROR("Read from tun_fd: %s\n", strerror(errno));
-    }
-
-    struct eth_header* header = to_ethernet_header(buffer);
-    handle_frame(interface, header);
+  for (int i = 0; i < THREADS; ++i) {
+    buffers[i] = calloc(BUFLEN, sizeof(char));
+    pthread_create(&(threads[i]), NULL, &process_io, buffers[i]);
   }
-  // Destroy everything created
-  arp_destroy();
-  net_interface_destroy();
+
+  while (1) {
+    sleep(1);
+  }
+
+  destroy();
   return EXIT_SUCCESS;
 }

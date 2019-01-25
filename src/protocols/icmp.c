@@ -1,20 +1,17 @@
+#include "icmp.h"
 #include <arpa/inet.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 
-#include "../ethernet.h"
 #include "../net_interface.h"
 
 #define DEBUG 0
 
-#include "../utils/checksum.h"
 #include "../utils/log.h"
-#include "ip.h"
+#include "../utils/protocols.h"
 
-#include "icmp.h"
 //------------------------------------------------------------------------------
 //                            STRUCTURES
 //------------------------------------------------------------------------------
@@ -45,7 +42,7 @@ struct icmp_v4_dst_unreachable {
 //------------------------------------------------------------------------------
 //                              PRINT
 //------------------------------------------------------------------------------
-void icmp_fprint(FILE* fd, struct icmp_v4* header, uint32_t len) {
+void icmp_fprint(FILE* fd, const struct icmp_v4* header, uint32_t len) {
   assert(header != NULL);
   fprintf(fd, "ICMPv4 header [type=%u, code=%u, checksum=%u, length=%lu(%u)]",
           header->type, header->code, header->checksum,
@@ -54,16 +51,14 @@ void icmp_fprint(FILE* fd, struct icmp_v4* header, uint32_t len) {
 //------------------------------------------------------------------------------
 //                              CHECK
 //------------------------------------------------------------------------------
-static bool icmp_check(struct icmp_v4* header, uint32_t len) {
+static bool icmp_check(const struct icmp_v4* header, uint32_t len) {
   return 0 == internet_checksum((char*)header, len);
 }
 //------------------------------------------------------------------------------
 //                            ECHO REPLY
 //------------------------------------------------------------------------------
-static void receive_echo_request(struct net_interface* interface,
-                                 struct ip_header* ip_header,
+static void receive_echo_request(struct ip_header* ip_header,
                                  struct icmp_v4* header) {
-  assert(interface != NULL);
   assert(ip_header != NULL);
   assert(header != NULL);
 
@@ -85,19 +80,17 @@ static void receive_echo_request(struct net_interface* interface,
   printf("\n");
 #endif
 
-  ip_header_set_dst(ip_header, ip_header_get_src_addr(ip_header));
-  ip_header_set_src(ip_header, ntohl(net_interface_get_ip(interface)));
+  ip_header->dst_addr = ip_header->src_addr;
+  ip_header->src_addr = ntohl(net_interface_get_ip());
 
-  ip_send_packet(interface, ip_header);
+  ip_send_packet(ip_header);
 }
 //------------------------------------------------------------------------------
 //                            ICMP RECEPTION
 //------------------------------------------------------------------------------
-void icmp_receive(struct net_interface* interface,
-                  struct ip_header* ip_header) {
-  assert(interface != NULL);
+void icmp_receive(struct ip_header* ip_header) {
   assert(ip_header != NULL);
-  struct icmp_v4* header = (struct icmp_v4*)ip_header_get_payload(ip_header);
+  struct icmp_v4* header = (struct icmp_v4*)ip_header->payload;
   if (!icmp_check(header, ip_header_get_payload_length(ip_header))) {
     ERROR("ICMPv4: Invalid packet checksum\n");
     return;
@@ -115,7 +108,7 @@ void icmp_receive(struct net_interface* interface,
     break;
   case ICMP_ECHO_REQUEST:
     LOG_DEBUG("[ICMPv4] Received ECHO request.\n");
-    receive_echo_request(interface, ip_header, header);
+    receive_echo_request(ip_header, header);
     break;
   case ICMP_DESTINATION_UNREACHABLE:
     ERROR("ICMPv4: Unsupported message type: destination unreachable\n");
