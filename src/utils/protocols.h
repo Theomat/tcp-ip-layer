@@ -2,8 +2,6 @@
 
 #ifndef PROTOCOLS_H
 #define PROTOCOLS_H
-/*
- * Taken from https://tools.ietf.org/html/rfc1071
- */
-uint16_t internet_checksum(const void* addr, unsigned int count);
+uint16_t sum16(const void* addr, unsigned int count);
+#define internet_checksum(addr, count) ((uint16_t)~sum16(addr, count))
 #endif

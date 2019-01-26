@@ -35,13 +35,9 @@ static bool tcp_header_check(struct ip_header* ip_header,
                              struct tcp_header* header) {
   assert(header != NULL);
   uint32_t len = ip_header_get_payload_length(ip_header);
-  uint32_t sum = ~internet_checksum((char*)header, len) + htons(len) +
-                 htons(PROTOCOL_TCP) + htonl(ip_header->src_addr) +
-                 htonl(ip_header->dst_addr);
-  while (sum >> 16)
-    sum = (sum & 0xffff) + (sum >> 16);
-
-  return (uint16_t)(sum + 2) == 0;
+  uint32_t sum = sum16((char*)header, len) + htons(len) + htons(PROTOCOL_TCP) +
+                 htonl(ip_header->src_addr) + htonl(ip_header->dst_addr);
+  return internet_checksum(&sum, sizeof(uint32_t)) == 0;
 }
 
 void tcp_header_ntoh(struct tcp_header* header) {

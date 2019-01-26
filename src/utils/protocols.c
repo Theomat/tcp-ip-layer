@@ -1,9 +1,9 @@
 #include "protocols.h"
-/* Compute Internet Checksum for "count" bytes
+/** Compute Internet sum for "count" bytes
  *         beginning at location "addr".
- * Taken from https://tools.ietf.org/html/rfc1071
- */
-uint16_t internet_checksum(const void* addr, unsigned int count) {
+  Taken from https://tools.ietf.org/html/rfc1071
+**/
+uint16_t sum16(const void* addr, unsigned int count) {
   register uint32_t sum = 0;
   const uint16_t* ptr   = addr;
 
@@ -20,6 +20,5 @@ uint16_t internet_checksum(const void* addr, unsigned int count) {
   /*  Fold 32-bit sum to 16 bits */
   while (sum >> 16)
     sum = (sum & 0xffff) + (sum >> 16);
-
-  return ~sum;
+  return sum;
 }
